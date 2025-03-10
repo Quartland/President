@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блог Президента Квартленда</title>
+    <style>
+        /* Градиентный фон */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b, #ff7300);
+            background-size: 400% 400%;
+            animation: gradientBG 10s infinite alternate;
+            color: white;
+            text-align: center;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* Заголовок */
+        header {
+            padding: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Контейнер */
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* Форма добавления постов (только для президента) */
+        .post-form {
+            display: none;
+        }
+
+        .post-form input, .post-form textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .post-form button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            color: white;
+            background: #ff4b2b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .post-form button:hover {
+            background: #ff7300;
+        }
+
+        /* Стили для постов */
+        .post {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .post h3 {
+            margin: 0;
+            color: #ffebcd;
+        }
+
+        .post p {
+            margin-top: 10px;
+        }
+
+        /* Окно выбора гражданства */
+        .auth-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .auth-box button {
+            margin: 10px;
+            padding: 10px 15px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .citizen-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .citizen-btn:hover {
+            background: #218838;
+        }
+
+        .president-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .president-btn:hover {
+            background: #c82333;
+        }
+
+        .logout-btn {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #dc3545;
+            border: none;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <header>Блог Президента Квартленда</header>
+
+    <div class="container">
+        <!-- Форма для добавления постов (только для президента) -->
+        <div class="post-form" id="post-form">
+            <input type="text" id="title" placeholder="Заголовок поста">
+            <textarea id="content" rows="4" placeholder="Текст поста"></textarea>
+            <button onclick="addPost()">Добавить пост</button>
+            <button class="logout-btn" onclick="logout()">Выйти</button>
+        </div>
+
+        <!-- Область постов -->
+        <div id="posts"></div>
+    </div>
+
+    <!-- Окно выбора гражданства -->
+    <div class="auth-box" id="auth-box">
+        <h2>Вы хотите читатель или президент?</h2>
+        <button class="citizen-btn" onclick="enterAsCitizen()">Читатель</button>
+        <button class="president-btn" onclick="enterAsPresident()">Президент</button>
+    </div>
+
+    <script>
+        function enterAsCitizen() {
+            sessionStorage.setItem("role", "citizen");
+            document.getElementById("auth-box").style.display = "none";
+            loadPosts();
+        }
+
+        function enterAsPresident() {
+            const password = prompt("Введите пароль президента:");
+            if (password === "QuartPres") {
+                sessionStorage.setItem("role", "president");
+                document.getElementById("auth-box").style.display = "none";
+                showPostForm();
+            } else {
+                alert("Неверный пароль!");
+            }
+        }
+
+        function showPostForm() {
+            document.getElementById("post-form").style.display = "block";
+            document.querySelector(".logout-btn").style.display = "block";
+        }
+
+        function logout() {
+            sessionStorage.removeItem("role");
+            location.reload();
+        }
+
+        function loadPosts() {
+            const postsContainer = document.getElementById("posts");
+            postsContainer.innerHTML = "";
+            const posts = JSON.parse(localStorage.getItem("posts")) || [];
+
+            posts.forEach(post => {
+                const postElement = document.createElement("div");
+                postElement.classList.add("post");
+                postElement.innerHTML = `<h3>${post.title}</h3><p>${post.content}</p>`;
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        function addPost() {
+            const title = document.getElementById("title").value.trim();
+            const content = document.getElementById("content").value.trim();
+
+            if (title === "" || content === "") {
+                alert("Пожалуйста, заполните все поля!");
+                return;
+            }
+
+            const newPost = { title, content };
+            const posts = JSON.parse(localStorage.getItem("posts")) || [];
+            posts.unshift(newPost);
+            localStorage.setItem("posts", JSON.stringify(posts));
+
+            document.getElementById("title").value = "";
+            document.getElementById("content").value = "";
+
+            loadPosts();
+        }
+
+        window.onload = () => {
+            const role = sessionStorage.getItem("role");
+
+            if (role === "president") {
+                document.getElementById("auth-box").style.display = "none";
+                showPostForm();
+            } else if (role === "citizen") {
+                document.getElementById("auth-box").style.display = "none";
+                loadPosts();
+            }
+        };
+    </script>
+</body>
+</html>
